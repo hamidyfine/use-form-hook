@@ -1,8 +1,17 @@
+import { useForm } from './hooks/use-form';
+
+type TFormValues = {
+    name: string;
+    email: string;
+}
+
 const App = () => {
-    const onClickHandler = (e: any) => {
-        e.preventDefault();
-        console.log('click');
-    };
+    const formHandler = useForm<TFormValues>({
+        initial_value: {
+            name: '',
+            email: '',
+        },
+    });
 
     return (
         <div className="flex items-center justify-center w-screen h-screen bg-slate-50">
@@ -10,7 +19,7 @@ const App = () => {
                 <h1 className="text-center text-lg mb-4 w-full">React Form Hook</h1>
                 <form
                     className="border rounded-md shadow-sm w-full bg-white p-4"
-                    onSubmit={onClickHandler}
+                    onSubmit={formHandler.onSubmit}
                 >
                     <div className="flex flex-col mb-4">
                         <label
@@ -24,6 +33,7 @@ const App = () => {
                             id="name"
                             name="name"
                             type="text"
+                            onChange={formHandler.onChange}
                         />
                     </div>
 
@@ -39,6 +49,7 @@ const App = () => {
                             id="email"
                             name="email"
                             type="email"
+                            onChange={formHandler.onChange}
                         />
                     </div>
 
