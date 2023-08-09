@@ -1,3 +1,6 @@
+import React from 'react';
+import * as yup from 'yup';
+import _ from 'lodash';
 import { useForm } from './hooks/use-form';
 
 type TFormValues = {
@@ -6,12 +9,32 @@ type TFormValues = {
 }
 
 const App = () => {
+    console.log('app re-rendered!');
+    const [errors, setErrors] = React.useState<TFormValues>();
+
+    const validation_schema = yup.object().shape({
+        name: yup.string().min(3, 'Name must be at least 3 characters long'),
+        email: yup.string().email('Invalid email').required('Email is required'),
+    });
+
     const formHandler = useForm<TFormValues>({
         initial_value: {
             name: '',
             email: '',
         },
+        validation_schema,
     });
+
+    const onSubmitHandler = (values: any, errs: any) => {
+        if (!_.isEmpty(errs) && !_.isEqual(errors, errs)) {
+            setErrors(errs);
+        }
+
+        if (_.isEmpty(errs)) {
+            if (!_.isEqual(errors, errs)) setErrors(errs);
+            console.log('🚀 ~ file: App.tsx:37 ~ values:', values);
+        }
+    };
 
     return (
         <div className="flex items-center justify-center w-screen h-screen bg-slate-50">
@@ -19,7 +42,7 @@ const App = () => {
                 <h1 className="text-center text-lg mb-4 w-full">React Form Hook</h1>
                 <form
                     className="border rounded-md shadow-sm w-full bg-white p-4"
-                    onSubmit={formHandler.onSubmit}
+                    onSubmit={formHandler.onSubmit(onSubmitHandler)}
                 >
                     <div className="flex flex-col mb-4">
                         <label
@@ -35,6 +58,7 @@ const App = () => {
                             type="text"
                             onChange={formHandler.onChange}
                         />
+                        <span className="pt-1 text-xs text-red-600">{errors && errors['name']}</span>
                     </div>
 
                     <div className="flex flex-col">
@@ -48,9 +72,10 @@ const App = () => {
                             className="border rounded-md p-2 text-sm"
                             id="email"
                             name="email"
-                            type="email"
+                            type="text"
                             onChange={formHandler.onChange}
                         />
+                        <span className="pt-1 text-xs text-red-600">{errors && errors['email']}</span>
                     </div>
 
                     <button
