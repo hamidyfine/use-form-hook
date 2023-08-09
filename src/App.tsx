@@ -1,7 +1,7 @@
 import React from 'react';
 import * as yup from 'yup';
 import _ from 'lodash';
-import { useForm } from './hooks/use-form';
+import { TFormErrors, useForm } from './hooks/use-form';
 
 type TFormValues = {
     name: string;
@@ -10,20 +10,32 @@ type TFormValues = {
 
 const App = () => {
     console.log('app re-rendered!');
-    const [errors, setErrors] = React.useState<TFormValues>();
+    const [errors, setErrors] = React.useState<TFormErrors>();
 
     const validation_schema = yup.object().shape({
         name: yup.string().min(3, 'Name must be at least 3 characters long'),
         email: yup.string().email('Invalid email').required('Email is required'),
     });
 
-    const formHandler = useForm<TFormValues>({
+    const { onChange, onSubmit } = useForm<TFormValues>({
         initial_value: {
             name: '',
             email: '',
         },
         validation_schema,
     });
+
+    const onChangeHandler = (name: string, value: unknown, error: string) => {
+        if (error) {
+            setErrors((errors) => {
+                return { ...errors, [name]: error };
+            });
+        } else if (!error && errors && errors[name as keyof typeof errors]) {
+            setErrors((errors) => {
+                return _.omit(errors, name);
+            });
+        }
+    };
 
     const onSubmitHandler = (values: any, errs: any) => {
         if (!_.isEmpty(errs) && !_.isEqual(errors, errs)) {
@@ -32,7 +44,6 @@ const App = () => {
 
         if (_.isEmpty(errs)) {
             if (!_.isEqual(errors, errs)) setErrors(errs);
-            console.log('🚀 ~ file: App.tsx:37 ~ values:', values);
         }
     };
 
@@ -42,7 +53,7 @@ const App = () => {
                 <h1 className="text-center text-lg mb-4 w-full">React Form Hook</h1>
                 <form
                     className="border rounded-md shadow-sm w-full bg-white p-4"
-                    onSubmit={formHandler.onSubmit(onSubmitHandler)}
+                    onSubmit={onSubmit(onSubmitHandler)}
                 >
                     <div className="flex flex-col mb-4">
                         <label
@@ -56,7 +67,7 @@ const App = () => {
                             id="name"
                             name="name"
                             type="text"
-                            onChange={formHandler.onChange}
+                            onChange={onChange(onChangeHandler)}
                         />
                         <span className="pt-1 text-xs text-red-600">{errors && errors['name']}</span>
                     </div>
@@ -73,7 +84,7 @@ const App = () => {
                             id="email"
                             name="email"
                             type="text"
-                            onChange={formHandler.onChange}
+                            onChange={onChange()}
                         />
                         <span className="pt-1 text-xs text-red-600">{errors && errors['email']}</span>
                     </div>

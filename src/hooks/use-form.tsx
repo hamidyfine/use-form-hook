@@ -1,24 +1,30 @@
 import React from 'react';
-import yup from 'yup';
+import * as yup from 'yup';
 import _ from 'lodash';
+
+export type TFormErrors = Record<string, string>;
 
 type TFormConfig<T> = {
     initial_value: T;
     validation_schema?: yup.ObjectSchema<any>;
 };
 
-type FormSubmitHandler = {
-  (values: any, errors: any): void;
+type TFormChangeHandler = {
+    (name: string, value: unknown, error: string): void;
+}
+
+type TFormSubmitHandler<T> = {
+    (values: T, errors: TFormErrors): void;
 }
 
 export const useForm = <T extends {}>({ initial_value, validation_schema }: TFormConfig<T>) => {
     const valuesRef = React.useRef<T>(initial_value);
-    const errorsRef = React.useRef({});
+    const errorsRef = React.useRef<TFormErrors>({});
 
     const validateField = React.useCallback(
         async (name: string) => {
             if (!validation_schema) return;
-            
+
             try {
                 await validation_schema.validateAt(name, valuesRef.current);
                 errorsRef.current = _.omit(errorsRef.current, name);
@@ -30,24 +36,28 @@ export const useForm = <T extends {}>({ initial_value, validation_schema }: TFor
     );
 
     const onChange = React.useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>) => {
-            const { name, value } = e.target;
-            valuesRef.current = { ...valuesRef.current, [name]: value };
+        (onChange?: TFormChangeHandler) => (event: React.ChangeEvent<HTMLInputElement>) => {
+            const { name, value } = event.target;
             validateField(name);
+            valuesRef.current = { ...valuesRef.current, [name]: value };
+
+            _.defer(() => {
+                onChange?.(name, value, errorsRef.current[name]);
+            });
         },
         [validateField],
     );
 
-    const onSubmit = (onSubmit: FormSubmitHandler) => (event: React.FormEvent<HTMLFormElement>) => {
+    const onSubmit = (onSubmit: TFormSubmitHandler<T>) => (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         for (const key of Object.keys(valuesRef.current)) {
             validateField(key);
         }
 
-        setTimeout(() => {
+        _.defer(() => {
             onSubmit(valuesRef.current, errorsRef.current);
-        }, 0);
+        });
     };
 
     return {
