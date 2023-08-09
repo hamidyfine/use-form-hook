@@ -6,6 +6,8 @@ type TFormValues = {
 }
 
 const App = () => {
+    console.log('app re-rendered!');
+
     const formHandler = useForm<TFormValues>({
         initial_value: {
             name: '',
@@ -13,13 +15,18 @@ const App = () => {
         },
     });
 
+    const onSubmitHandler = (values: any, errors: any) => {
+        console.log('🚀 ~ file: App.tsx:19 ~ errors:', errors);
+        console.log('🚀 ~ file: App.tsx:19 ~ values:', values);
+    };
+
     return (
         <div className="flex items-center justify-center w-screen h-screen bg-slate-50">
             <div className="flex flex-col items-center justify-center w-2/6">
                 <h1 className="text-center text-lg mb-4 w-full">React Form Hook</h1>
                 <form
                     className="border rounded-md shadow-sm w-full bg-white p-4"
-                    onSubmit={formHandler.onSubmit}
+                    onSubmit={formHandler.onSubmit(onSubmitHandler)}
                 >
                     <div className="flex flex-col mb-4">
                         <label
@@ -48,7 +55,7 @@ const App = () => {
                             className="border rounded-md p-2 text-sm"
                             id="email"
                             name="email"
-                            type="email"
+                            type="text"
                             onChange={formHandler.onChange}
                         />
                     </div>

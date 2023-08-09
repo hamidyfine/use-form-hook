@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 type TFormConfig<T> = {
     initial_value: T;
@@ -9,40 +9,39 @@ type TFormData = {
     errors: any;
 }
 
+interface FormSubmitHandler {
+  (values: any, errors: any): void;
+}
+
 export const useForm = <T extends {}>({ initial_value }: TFormConfig<T>) => {
     const [form_data, setFormData] = React.useState<TFormData>({
         values: initial_value,
         errors: {},
     });
 
-    useEffect(() => {
-        console.log('🚀 form_data:', form_data.values);
-    }, [form_data]);
-
     const onChange = React.useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const { name, value } = e.target;
             const newValues = { ...form_data.values, [name]: value };
             setFormData(prevState => {
-                console.log('🚀 ~ file: use-form.tsx:31 ~ prevState:', prevState.values);
-                console.log('🚀 ~ file: use-form.tsx:35 ~ newValues:', newValues);
                 return {
                     ...prevState,
                     values: newValues,
                 };
             });
-            console.log('🚀 ~ file: use-form.tsx:24 ~ form_data:', form_data.values);
         },
         [form_data.values],
     );
 
-    const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        // onSubmit(values);
+    const onSubmit = (onSubmit: FormSubmitHandler) => async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        onSubmit(form_data.values, form_data.errors);
     };
 
     return {
         onSubmit,
         onChange,
+        values: form_data.values,
+        errors: form_data.errors,
     };
 };
