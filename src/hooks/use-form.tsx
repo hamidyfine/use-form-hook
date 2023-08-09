@@ -4,7 +4,7 @@ type TFormConfig<T> = {
     initial_value: T;
 };
 
-interface FormSubmitHandler {
+type FormSubmitHandler = {
   (values: any, errors: any): void;
 }
 
