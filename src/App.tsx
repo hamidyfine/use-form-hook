@@ -1,3 +1,6 @@
+import React from 'react';
+import * as yup from 'yup';
+import _ from 'lodash';
 import { useForm } from './hooks/use-form';
 
 type TFormValues = {
@@ -7,17 +10,30 @@ type TFormValues = {
 
 const App = () => {
     console.log('app re-rendered!');
+    const [errors, setErrors] = React.useState<TFormValues>();
+
+    const validation_schema = yup.object().shape({
+        name: yup.string().min(3, 'Name must be at least 3 characters long'),
+        email: yup.string().email('Invalid email').required('Email is required'),
+    });
 
     const formHandler = useForm<TFormValues>({
         initial_value: {
             name: '',
             email: '',
         },
+        validation_schema,
     });
 
-    const onSubmitHandler = (values: any, errors: any) => {
-        console.log('🚀 ~ file: App.tsx:19 ~ errors:', errors);
-        console.log('🚀 ~ file: App.tsx:19 ~ values:', values);
+    const onSubmitHandler = (values: any, errs: any) => {
+        if (!_.isEmpty(errs) && !_.isEqual(errors, errs)) {
+            setErrors(errs);
+        }
+
+        if (_.isEmpty(errs)) {
+            if (!_.isEqual(errors, errs)) setErrors(errs);
+            console.log('🚀 ~ file: App.tsx:37 ~ values:', values);
+        }
     };
 
     return (
@@ -42,6 +58,7 @@ const App = () => {
                             type="text"
                             onChange={formHandler.onChange}
                         />
+                        <span className="pt-1 text-xs text-red-600">{errors && errors['name']}</span>
                     </div>
 
                     <div className="flex flex-col">
@@ -58,6 +75,7 @@ const App = () => {
                             type="text"
                             onChange={formHandler.onChange}
                         />
+                        <span className="pt-1 text-xs text-red-600">{errors && errors['email']}</span>
                     </div>
 
                     <button
